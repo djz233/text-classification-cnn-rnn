@@ -4,7 +4,7 @@ import sys
 from collections import Counter
 
 import numpy as np
-import tensorflow.keras as kr
+import tensorflow.contrib.keras as kr
 
 if sys.version_info[0] > 2:
     is_py3 = True
@@ -41,7 +41,9 @@ def open_file(filename, mode='r'):
 
 
 def read_file(filename):
-    """读取文件数据"""
+    """读取文件数据,数据均以label开头，用\\t间隔
+    return contents, labels"""
+    
     contents, labels = [], []
     with open_file(filename) as f:
         for line in f:
@@ -62,13 +64,19 @@ def build_vocab(train_dir, vocab_dir, vocab_size=5000):
     all_data = []
     for content in data_train:
         all_data.extend(content)
-
-    counter = Counter(all_data)
-    count_pairs = counter.most_common(vocab_size - 1)
-    words, _ = list(zip(*count_pairs))
+    #此处使用jieba分词    
+    #需要重写
+    counter = Counter(all_data) #将文本库转换为 单词：次数 的字典，问题是分字不是分词
+    
+    count_pairs = counter.most_common(vocab_size - 1) #记录高频词语 输出包含高频词+频数的数列，数列中每个元素是元组
+    words, _ = list(zip(*count_pairs)) #解压，记录单词
+    print("test")
+    print(words)
+    input()
     # 添加一个 <PAD> 来将所有文本pad为同一长度
     words = ['<PAD>'] + list(words)
     open_file(vocab_dir, mode='w').write('\n'.join(words) + '\n')
+    input()
 
 
 def read_vocab(vocab_dir):
@@ -119,6 +127,10 @@ def batch_iter(x, y, batch_size=64):
     num_batch = int((data_len - 1) / batch_size) + 1
 
     indices = np.random.permutation(np.arange(data_len))
+    '''
+    np.arange()函数返回一个有终点和起点的固定步长的排列，如[1,2,3,4,5]，起点是1，终点是5，步长为1
+    np.random.permutation随机排列一个序列，返回一个排列的序列。如果是一个多维序列那么只有第一维被重排
+    '''
     x_shuffle = x[indices]
     y_shuffle = y[indices]
 
